@@ -50,7 +50,7 @@ typedef struct {
 } tipo_snakePi;
 
 extern int flags; // Flags generales de sistema (necesario para comunicacion inter-FMs)
-
+extern int numero_manzanas;
 //------------------------------------------------------
 // PROCEDIMIENTOS DE INICIALIZACION DE LOS OBJETOS ESPECIFICOS
 //------------------------------------------------------
@@ -88,6 +88,7 @@ int CompruebaMovimientoArriba (fsm_t* this);
 int CompruebaMovimientoAbajo (fsm_t* this);
 int CompruebaMovimientoIzquierda (fsm_t* this);
 int CompruebaMovimientoDerecha (fsm_t* this);
+int CompruebaPausaJuego(fsm_t *this);
 int CompruebaTimeoutActualizacionJuego (fsm_t* this);
 int CompruebaFinalJuego (fsm_t* this);
 
@@ -101,6 +102,7 @@ void MueveSerpienteArriba (fsm_t* this);
 void MueveSerpienteAbajo (fsm_t* this);
 void ActualizarJuego (fsm_t* this);
 void FinalJuego (fsm_t* this);
+void PausaJuego(fsm_t *this);
 void ReseteaJuego (fsm_t* this);
 
 #endif /* _SNAKEPILIB_H_ */

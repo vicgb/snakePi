@@ -4,6 +4,10 @@
 // PROCEDIMIENTOS DE INICIALIZACION DE LOS OBJETOS ESPECIFICOS
 //------------------------------------------------------
 
+//Variable nueva donde se almacena el numero de manzanas.
+int numero_manzanas = 0;
+
+
 void InicializaManzana(tipo_manzana *p_manzana) {
 	// Aleatorizamos la posicion inicial de la manzana
 	p_manzana->x = rand() % NUM_COLUMNAS_DISPLAY;
@@ -42,6 +46,7 @@ void InicializaSnakePi(tipo_snakePi *p_snakePi) {
 }
 
 void ResetSnakePi(tipo_snakePi *p_snakePi) {
+	numero_manzanas = 0;
 	InicializaSerpiente(&(p_snakePi->serpiente));
 	InicializaManzana(&(p_snakePi->manzana));
 }
@@ -82,7 +87,8 @@ int ActualizaLongitudSerpiente(tipo_serpiente *p_serpiente) {
 }
 
 int ActualizaSnakePi(tipo_snakePi *p_snakePi) {
-	tipo_segmento *seg_i;
+	//tipo_segmento *seg_i;
+
 
 	ActualizaColaSerpiente(&(p_snakePi->serpiente));
 
@@ -148,18 +154,27 @@ void CambiarDireccionSerpiente(tipo_serpiente *serpiente,
 	}
 }
 
+
 int CompruebaColision(tipo_serpiente *serpiente, tipo_manzana *manzana,
 		int comprueba_manzana) {
 	tipo_segmento *seg_i;
 
 
+
 	if (comprueba_manzana) {
+
 		// Para todos los elementos de la p_cola...
 		for (seg_i = serpiente->p_cola; seg_i; seg_i = seg_i->p_next) {
 			// ...compruebo si alguno ha "colisionado" con la manzana
-			if (seg_i->x == manzana->x && seg_i->y == manzana->y)
+			if (seg_i->x == manzana->x && seg_i->y == manzana->y){
+				//Se suma 1 cada vez que se come una manzana.
+				numero_manzanas = numero_manzanas + 1;
 				return 1;
+			}
+
+
 		}
+
 
 		return 0;
 	} else {
@@ -170,14 +185,21 @@ int CompruebaColision(tipo_serpiente *serpiente, tipo_manzana *manzana,
 				return 1;
 		}
 
-		// Compruebo si la cabeza de la serpiente rebasa los limites del area de juego...
-		if (serpiente->cabeza.x
-				< 0|| serpiente->cabeza.x >= NUM_COLUMNAS_DISPLAY ||
-				serpiente->cabeza.y < 0 || serpiente->cabeza.y >= NUM_FILAS_DISPLAY) {
+		if(serpiente->cabeza.x < 0){
+			serpiente->cabeza.x = NUM_COLUMNAS_DISPLAY;
 
+		}
+		else if( serpiente->cabeza.x >= NUM_COLUMNAS_DISPLAY){
+			serpiente->cabeza.x = 0;
 
+		}
+		else if(serpiente->cabeza.y < 0){
+			serpiente->cabeza.y = NUM_FILAS_DISPLAY;
 
-			return 1;
+		}
+		else if(serpiente->cabeza.y >= NUM_FILAS_DISPLAY){
+			serpiente->cabeza.y = 0;
+
 		}
 
 		return 0;
@@ -230,29 +252,15 @@ void ActualizaPantallaSnakePi(tipo_snakePi *p_snakePi) {
 	PintaSerpiente(p_snakePi);
 }
 
-/*
- * Creado por nosotros.
- * Para que cuando choque contra la pared, vuelva a actualizarse sin necesidad
- * de tener que resetearse.
 
-void ActualizaPantallaSnakePiDespuesColision(tipo_snakePi *p_snakePi) {
-
-
-	PintaManzana(p_snakePi);
-	PintaSerpiente(p_snakePi);
-
-	ActualizaPantallaSnakePi(p_snakePi);
-}
-
-*/
 
 void ReseteaPantallaSnakePi(tipo_pantalla *p_pantalla) {
 
-	int i = 0;
-	int j = 0;
+	int i;
+	int j;
 
-	for (i = 0; i <= NUM_FILAS_DISPLAY; i++) {
-		for (j = 0; j <= NUM_COLUMNAS_DISPLAY; j++) {
+	for (i = 0; i < NUM_COLUMNAS_DISPLAY; i++) {
+		for (j = 0; j < NUM_FILAS_DISPLAY; j++) {
 			p_pantalla->matriz[i][j] = 0;
 		}
 	}
@@ -332,6 +340,8 @@ int CompruebaFinalJuego(fsm_t *this) {
 	return result;
 }
 
+
+
 //------------------------------------------------------
 // FUNCIONES DE ACCION DE LA MAQUINA DE ESTADOS
 //------------------------------------------------------
@@ -344,11 +354,13 @@ void InicializaJuego(fsm_t *this) {
 	flags &= ~FLAG_BOTON;
 	piUnlock(SYSTEM_FLAGS_KEY);
 
-
-
+	piLock(MATRIX_KEY);
 	//Ejecutamos el juego.
 	InicializaSnakePi(p_snakePi);
+	piUnlock(MATRIX_KEY);
 }
+
+
 
 void MueveSerpienteIzquierda(fsm_t *this) {
 	tipo_snakePi *p_snakePi;
@@ -361,8 +373,7 @@ void MueveSerpienteIzquierda(fsm_t *this) {
 	CambiarDireccionSerpiente(&(p_snakePi->serpiente), IZQUIERDA);
 	ActualizaSnakePi(p_snakePi);
 
-	// Con esto se configura que el juego se para cuando choca con la pared.
-	// Habria que toquetear para cuando queramos que el juego siga.
+	// Creo que es a 1 y no a 0 segun entiendo el metodo CompruebaColision()
 	if (CompruebaColision(&(p_snakePi->serpiente), &(p_snakePi->manzana), 0)) {
 		piLock(SYSTEM_FLAGS_KEY);
 		flags |= FLAG_FIN_JUEGO;
@@ -395,8 +406,6 @@ void MueveSerpienteDerecha(fsm_t *this) {
 	CambiarDireccionSerpiente(&(p_snakePi->serpiente), DERECHA);
 	ActualizaSnakePi(p_snakePi);
 
-	// Con esto se configura que el juego se para cuando choca con la pared.
-	// Habria que toquetear para cuando queramos que el juego siga.
 	if (CompruebaColision(&(p_snakePi->serpiente), &(p_snakePi->manzana), 0)) {
 		piLock(SYSTEM_FLAGS_KEY);
 		flags |= FLAG_FIN_JUEGO;
@@ -431,8 +440,7 @@ void MueveSerpienteArriba(fsm_t *this) {
 	CambiarDireccionSerpiente(&(p_snakePi->serpiente), ARRIBA);
 	ActualizaSnakePi(p_snakePi);
 
-	// Con esto se configura que el juego se para cuando choca con la pared.
-	// Habria que toquetear para cuando queramos que el juego siga.
+
 	if (CompruebaColision(&(p_snakePi->serpiente), &(p_snakePi->manzana), 0)) {
 		piLock(SYSTEM_FLAGS_KEY);
 		flags |= FLAG_FIN_JUEGO;
@@ -467,8 +475,6 @@ void MueveSerpienteAbajo(fsm_t *this) {
 	ActualizaSnakePi(p_snakePi);
 
 
-	// Con esto se configura que el juego se para cuando choca con la pared.
-	// Habria que toquetear para cuando queramos que el juego siga.
 	if (CompruebaColision(&(p_snakePi->serpiente), &(p_snakePi->manzana), 0)) {
 		piLock(SYSTEM_FLAGS_KEY);
 		flags |= FLAG_FIN_JUEGO;
@@ -499,11 +505,15 @@ void ActualizarJuego(fsm_t *this) {
 	flags &= (~FLAG_TIMER_JUEGO);
 	piUnlock(SYSTEM_FLAGS_KEY);
 
+	// Con esto apago el flag_boton y hago que si se da a la S no se reinicie.
+	piLock(SYSTEM_FLAGS_KEY);
+	flags &= (~FLAG_BOTON);
+	piUnlock(SYSTEM_FLAGS_KEY);
+
 	ActualizaSnakePi(p_snakePi);
 
 
-	// Con esto se configura que el juego se para cuando choca con la pared.
-	// Habria que toquetear para cuando queramos que el juego siga.
+
 	if (CompruebaColision(&(p_snakePi->serpiente), &(p_snakePi->manzana), 0)) {
 		piLock(SYSTEM_FLAGS_KEY);
 		flags |= FLAG_FIN_JUEGO;
@@ -536,27 +546,10 @@ void FinalJuego(fsm_t *this) {
 	flags &= (~FLAG_FIN_JUEGO);
 	piUnlock(SYSTEM_FLAGS_KEY);
 
-	//ActualizaPantallaSnakePi(p_snakePi);
-
-	// Con esto se configura que el juego se para cuando choca con la pared.
-	// Habria que toquetear para cuando queramos que el juego siga.
-	if (CompruebaColision(&(p_snakePi->serpiente), &(p_snakePi->manzana), 0)) {
-		piLock(SYSTEM_FLAGS_KEY);
-		flags |= FLAG_FIN_JUEGO;
-		printf("Ha chocado contra la pared. Se ha acabado el juego.\n");
-		printf("Si quieres volver a jugar, pulsa dos veces la tecla 's'");
-
-		fflush(stdout);
-		piUnlock(SYSTEM_FLAGS_KEY);
-	}
-
-	else {
-
-		piLock(STD_IO_BUFFER_KEY);
-		PintaPantallaPorTerminal(p_snakePi->p_pantalla);
-		piUnlock(STD_IO_BUFFER_KEY);
-	}
-
+	printf("Te has comido %d manzanas. \n", numero_manzanas/2);
+	printf("Vuelve a pulsar la S para jugar");
+	fflush(stdout);
+	ActualizaSnakePi(p_snakePi);
 }
 
 void ReseteaJuego(fsm_t *this) {

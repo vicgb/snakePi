@@ -17,10 +17,10 @@
 #include "tmr.h"
 
 #define CLK_MS 					1
-#define TIMEOUT 				1500
+#define TIMEOUT 				1000
 // ATENCION: Valores a modificar por el alumno
 // INTERVALO DE GUARDA ANTI-REBOTES
-#define	DEBOUNCE_TIME			25
+#define	DEBOUNCE_TIME			200
 #define TIMEOUT_ACTUALIZA_JUEGO 1000
 
 // A 'key' which we can lock and unlock - values are 0 through 3
@@ -29,10 +29,10 @@
 
 // CLAVES PARA MUTEX
 // ATENCION: Valores a modificar por el alumno
-#define	KEYBOARD_KEY		0
-#define	SYSTEM_FLAGS_KEY	1
-#define	MATRIX_KEY			2
-#define	STD_IO_BUFFER_KEY	3
+#define	KEYBOARD_KEY		1
+#define	SYSTEM_FLAGS_KEY	2
+#define	MATRIX_KEY			3
+#define	STD_IO_BUFFER_KEY	4
 
 // Distribucion de pines GPIO empleada para el teclado y el display
 // ATENCION: Valores a modificar por el alumno
@@ -66,6 +66,7 @@
 #define FLAG_TIMER_JUEGO	0x10
 #define FLAG_BOTON 			0x20
 #define FLAG_FIN_JUEGO		0x40
+
 
 enum fsm_state {
 	WAIT_START,

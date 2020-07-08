@@ -16,7 +16,7 @@
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 #include <asm/ioctl.h>
-
+#include <stdio.h>
 #include <sched.h>
 #include <string.h>
 
@@ -48,10 +48,10 @@ static void (*isrFunctions [64])(void) ;
 
 static int columnaTecladoActiva = -1;
 static char pseudoTecladoTL04[4][4] = {
-	{'1', '2', '3', 'c'},
-	{'4', '5', '6', 'd'},
-	{'7', '8', '9', 'e'},
-	{'a', '0', 'b', 'f'}
+	{'Q', 'W', 'E', 'R'},
+	{'A', 'S', 'D', 'F'},
+	{'Z', 'X', 'C', 'V'},
+	{'1', '2', '3', '4'}
 };
 
 static int array_flags_check_columnas_teclado [4] = {0x01, 0x02, 0x04, 0x08};
