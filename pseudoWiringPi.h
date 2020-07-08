@@ -1,3 +1,11 @@
+/*
+ * pseudoWiringPi.h
+ *
+ *  Created on: 31 de Mar. de 2020
+ *      Author: FFM
+ *      COMPATIBLE v4.0
+ */
+
 #ifndef _PSEUDO_WIRINGPI_H_
 #define _PSEUDO_WIRINGPI_H_
 
@@ -94,5 +102,7 @@ extern void piUnlock            (int key) ;
 
 extern void         delay             (unsigned int howLong) ;
 extern unsigned int millis            (void) ;
+
+extern void pseudoWiringPiEnableDisplay(int estado);
 
 #endif /* _PSEUDO_WIRINGPI_H_ */

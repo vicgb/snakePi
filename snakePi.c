@@ -2,6 +2,8 @@
 
 int flags = 0;
 
+
+
 // Declaracion del objeto teclado
 TipoTeclado teclado = {
 		.columnas = {
@@ -29,21 +31,32 @@ TipoTeclado teclado = {
 			.flags = 0,
 			.debounceTime = { 0, 0, 0, 0 },
 			.teclaPulsada = { -1, -1 },
-			.columna_actual = COLUMNA_1, };
+			.columna_actual = COLUMNA_1,
 
+};
 
 
 // Declaracion del objeto display
 TipoLedDisplay led_display = {
 			.columnas = {
-					// A completar por el alumno...
-					// ...
-			}, .filas = {
-					// A completar por el alumno...
-					// ...
+					GPIO_LED_DISPLAY_COL_1,
+					GPIO_LED_DISPLAY_COL_2,
+					GPIO_LED_DISPLAY_COL_3,
+					0,0,0,0,0,
+
 			},
-			// A completar por el alumno...
-			// ...
+			.filas = {
+					GPIO_LED_DISPLAY_ROW_1,
+					GPIO_LED_DISPLAY_ROW_2,
+					GPIO_LED_DISPLAY_ROW_3,
+					GPIO_LED_DISPLAY_ROW_4,
+					GPIO_LED_DISPLAY_ROW_5,
+					GPIO_LED_DISPLAY_ROW_6,
+					GPIO_LED_DISPLAY_ROW_7,
+			},
+			.columna_actual = COLUMNA_DISPLAY_1,
+			.flags = 0,
+
 			};
 
 //------------------------------------------------------
@@ -62,6 +75,9 @@ TipoLedDisplay led_display = {
 int ConfiguraInicializaSistema(TipoSistema *p_sistema) {
 	//int result = 0;
 
+	piLock(STD_IO_BUFFER_KEY);
+	wiringPiSetupGpio();
+	piUnlock(STD_IO_BUFFER_KEY);
 
 	// sets up the wiringPi library
 	if (wiringPiSetupGpio() < 0) {
@@ -71,10 +87,23 @@ int ConfiguraInicializaSistema(TipoSistema *p_sistema) {
 	}
 
 
+	//Inicializamos el display
+	InicializaLedDisplay(&led_display);
 	//Inicializamos el teclado
 	InicializaTeclado(&teclado);
 
 
+	printf("\nBienvenido a snakePi\n");
+	printf("\nControl del juego: S para empezar\n");
+	printf("D: Derecha, A: Izquierda, W: Arriba, X: Abajo, Z: Pausar, S: Reanudar\n");
+	printf("Mejoras:\n");
+	printf(" 1. - Te dice al acabar cuantas manzanas te has comido\n");
+	printf(" 2. - Cada 3 manzanas que se come, la serpiente va mas rápido\n");
+	printf(" 3. - Se puede pausar y reanudar el juego.\n");
+	printf(" 4. - No hay bordes.");
+
+
+	fflush(stdout);
 
 	return 1;
 }
@@ -83,82 +112,7 @@ int ConfiguraInicializaSistema(TipoSistema *p_sistema) {
 // FUNCIONES LIGADAS A THREADS ADICIONALES
 //------------------------------------------------------
 
-/*PI_THREAD (thread_explora_teclado_PC) {
- 	 int teclaPulsada;
 
- 	 while(1) {
- 	 	 delay(10); // Wiring Pi function: pauses program execution for at least 10 ms
-
- 	 	 piLock (STD_IO_BUFFER_KEY);
-
- 	 	 if(kbhit()) {
- 	 	 	 teclaPulsada = kbread();
-
- 	 	 switch(teclaPulsada) {
-
- 	 	 	 case 's':
-
- 	 	 	 	 printf("Comienza el juego\n");
- 	 	 	 	 fflush(stdout);
-
- 	 	 	 	 piLock(SYSTEM_FLAGS_KEY);
- 	 	 	 	 flags |= FLAG_BOTON;
- 	 	 	 	 piUnlock(SYSTEM_FLAGS_KEY);
-
-
- 	 	 	 	 printf("La serpiente se moverá sola, una vez inicie el movimiento");
- 	 	 	 	 fflush(stdout);
-
-
- 	 	 	 	 break;
- 	 	 	 case 'w':
-
- 	 	 	 	 printf("Moviendo hacia arriba\n");
- 	 	 	 	 fflush(stdout);
- 	 	 	 	 piLock(SYSTEM_FLAGS_KEY);
- 	 	 	 	 flags |= FLAG_MOV_ARRIBA;
- 	 	 	 	 piUnlock(SYSTEM_FLAGS_KEY);
-
- 	 	 	 	 break;
- 	 	 	 case 'x':
- 	 	 	 	 printf("Moviendo hacia abajo\n");
- 	 	 	 	 fflush(stdout);
- 	 	 	 	 piLock(SYSTEM_FLAGS_KEY);
- 	 	 	 	 flags |= FLAG_MOV_ABAJO;
- 	 	 	 	 piUnlock(SYSTEM_FLAGS_KEY);
-
- 	 	 	 	 break;
- 	 	 	 case 'd':
- 	 	 	 	 printf("Moviendo hacia la derecha\n");
- 	 	 	 	 fflush(stdout);
- 	 	 	 	 piLock(SYSTEM_FLAGS_KEY);
- 	 	 	 	 flags |= FLAG_MOV_DERECHA;
- 	 	 	 	 piUnlock(SYSTEM_FLAGS_KEY);
-
- 	 	 	 	 break;
- 	 	 	 case 'a':
- 	 	 	 	 printf("Moviendo hacia la izquierda\n");
- 	 	 	 	 fflush(stdout);
- 	 	 	 	 piLock(SYSTEM_FLAGS_KEY);
- 	 	 	 	 flags |= FLAG_MOV_IZQUIERDA;
- 	 	 	 	 piUnlock(SYSTEM_FLAGS_KEY);
-
- 	 	 	 	 break;
-
- 	 	 	 case 'q':
- 	 	 	 	 printf("Saliendo del juego.");
- 	 	 	 	 exit(0);
- 	 	 	 	 break;
-
- 	 	 	 default:
-
- 	 	 	 	 break;
- 	 	 	 }
- 	 	 }
-
- 	 	 piUnlock (STD_IO_BUFFER_KEY);
- 	 }
- }*/
 
 // wait until next_activation (absolute time)
 void delay_until(unsigned int next) {
@@ -190,31 +144,36 @@ int main() {
 			{ WAIT_PUSH, CompruebaMovimientoAbajo, WAIT_PUSH,MueveSerpienteAbajo },
 			{ WAIT_PUSH,CompruebaMovimientoIzquierda, WAIT_PUSH,MueveSerpienteIzquierda },
 			{ WAIT_PUSH, CompruebaMovimientoDerecha, WAIT_PUSH,MueveSerpienteDerecha },
+			{ WAIT_PUSH, CompruebaPausaJuego, WAIT_PAUSE, PausaJuego},
+			{ WAIT_PAUSE, CompruebaBotonPulsado,WAIT_PUSH, ReanudarJuego },
 			{ WAIT_PUSH, CompruebaFinalJuego,WAIT_END, FinalJuego },
 			{ WAIT_END, CompruebaBotonPulsado,WAIT_START, ReseteaJuego },
 			{ -1, NULL, -1, NULL },
+
 	};
 
 	// Configuracion e inicializacion del sistema
 	ConfiguraInicializaSistema(&sistema);
 
-	fsm_t *snakePi_fsm = fsm_new(WAIT_START, snakePi, &(sistema.snakePi));
-	sistema.snakePi.p_pantalla = &pantalla_inicial;
+	sistema.snakePi.p_pantalla = &(led_display.pantalla);
 
 	//Temporizador del snake.
 	sistema.snakePi.tmr_serpiente = tmr_new(timer_isr_snakePi);
 
+	fsm_t *snakePi_fsm = fsm_new(WAIT_START, snakePi, &(sistema.snakePi));
+
 	fsm_t *exc_col_fsm = fsm_new(TECLADO_ESPERA_COLUMNA,fsm_trans_excitacion_columnas, &(teclado));
 	fsm_t *exc_tecla_fsm = fsm_new(TECLADO_ESPERA_TECLA,fsm_trans_deteccion_pulsaciones, &(teclado));
-
-	//Temporizador del teclado
-	//teclado.tmr_duracion_columna = tmr_new(timer_duracion_columna_isr);
+	fsm_t *display_fsm = fsm_new(DISPLAY_ESPERA_COLUMNA, fsm_trans_excitacion_display, &(led_display));
 
 	next = millis();
 	while (1) {
 		fsm_fire(snakePi_fsm);
 		fsm_fire(exc_col_fsm);
 		fsm_fire(exc_tecla_fsm);
+		fsm_fire(display_fsm);
+
+
 
 		next += CLK_MS;
 		delay_until(next);
@@ -223,6 +182,8 @@ int main() {
 	fsm_destroy(snakePi_fsm);
 	fsm_destroy(exc_col_fsm);
 	fsm_destroy(exc_tecla_fsm);
+	fsm_destroy(display_fsm);
+
 
 	//Destruimos el tmr cuando se vuelva a empezar.
 	tmr_destroy((tmr_t*)(snakePi_fsm->user_data));

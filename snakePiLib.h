@@ -8,6 +8,7 @@
 #include "ledDisplay.h"
 #include "tmr.h"
 
+
 enum t_direccion {
 	ARRIBA,
 	DERECHA,
@@ -80,6 +81,7 @@ void PintaSerpiente(tipo_snakePi *p_snakePi);
 void ActualizaPantallaSnakePi(tipo_snakePi *p_snakePi);
 void ReseteaPantallaSnakePi(tipo_pantalla *p_pantalla);
 //void ActualizaPantallaSnakePiDespuesColision(tipo_snakePi *p_snakePi);
+
 //------------------------------------------------------
 // FUNCIONES DE TRANSICION DE LA MAQUINA DE ESTADOS
 //------------------------------------------------------
@@ -104,5 +106,6 @@ void ActualizarJuego (fsm_t* this);
 void FinalJuego (fsm_t* this);
 void PausaJuego(fsm_t *this);
 void ReseteaJuego (fsm_t* this);
+void ReanudarJuego(fsm_t* this);
 
 #endif /* _SNAKEPILIB_H_ */

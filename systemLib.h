@@ -1,6 +1,7 @@
 #ifndef _SYSTEMLIB_H_
 #define _SYSTEMLIB_H_
 
+//#define __SIN_PSEUDOWIRINGPI__
 #include <time.h>
 #include <signal.h>
 #include <stdio.h>
@@ -18,6 +19,11 @@
 
 #define CLK_MS 					1
 #define TIMEOUT 				1000
+#define TIMEOUT_RAPIDO			750
+#define TIMEOUT_RAPIDO2			500
+
+
+
 // ATENCION: Valores a modificar por el alumno
 // INTERVALO DE GUARDA ANTI-REBOTES
 #define	DEBOUNCE_TIME			200
@@ -29,10 +35,10 @@
 
 // CLAVES PARA MUTEX
 // ATENCION: Valores a modificar por el alumno
-#define	KEYBOARD_KEY		1
-#define	SYSTEM_FLAGS_KEY	2
-#define	MATRIX_KEY			3
-#define	STD_IO_BUFFER_KEY	4
+#define	KEYBOARD_KEY		0
+#define	SYSTEM_FLAGS_KEY	1
+#define	MATRIX_KEY			2
+#define	STD_IO_BUFFER_KEY	3
 
 // Distribucion de pines GPIO empleada para el teclado y el display
 // ATENCION: Valores a modificar por el alumno
@@ -40,22 +46,25 @@
 #define GPIO_KEYBOARD_COL_2 	1
 #define GPIO_KEYBOARD_COL_3 	2
 #define GPIO_KEYBOARD_COL_4 	3
+
 #define GPIO_KEYBOARD_ROW_1 	5
 #define GPIO_KEYBOARD_ROW_2 	6
 #define GPIO_KEYBOARD_ROW_3 	12
 #define GPIO_KEYBOARD_ROW_4 	13
 
-#define GPIO_LED_DISPLAY_COL_1	0
-#define GPIO_LED_DISPLAY_COL_2	0
-#define GPIO_LED_DISPLAY_COL_3	0
-#define GPIO_LED_DISPLAY_COL_4	0
-#define GPIO_LED_DISPLAY_ROW_1	0
-#define GPIO_LED_DISPLAY_ROW_2	0
-#define GPIO_LED_DISPLAY_ROW_3	0
-#define GPIO_LED_DISPLAY_ROW_4	0
-#define GPIO_LED_DISPLAY_ROW_5	0
-#define GPIO_LED_DISPLAY_ROW_6	0
-#define GPIO_LED_DISPLAY_ROW_7	0
+#define GPIO_LED_DISPLAY_COL_1	11
+#define GPIO_LED_DISPLAY_COL_2	14
+#define GPIO_LED_DISPLAY_COL_3	17
+//#define GPIO_LED_DISPLAY_COL_4
+
+
+#define GPIO_LED_DISPLAY_ROW_1	4
+#define GPIO_LED_DISPLAY_ROW_2	7
+#define GPIO_LED_DISPLAY_ROW_3	8
+#define GPIO_LED_DISPLAY_ROW_4	10
+#define GPIO_LED_DISPLAY_ROW_5	22
+#define GPIO_LED_DISPLAY_ROW_6	23
+#define GPIO_LED_DISPLAY_ROW_7	24
 
 // FLAGS FSM CONTROL DE SERPIENTE Y GESTION JUEGO
 // ATENCION: Valores a modificar por el alumno
@@ -66,11 +75,12 @@
 #define FLAG_TIMER_JUEGO	0x10
 #define FLAG_BOTON 			0x20
 #define FLAG_FIN_JUEGO		0x40
-
+#define FLAG_PAUSA_JUEGO	0x80 //Para pausar el juego
 
 enum fsm_state {
 	WAIT_START,
 	WAIT_PUSH,
+	WAIT_PAUSE,
 	WAIT_END};
 
 extern int flags;

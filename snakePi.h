@@ -8,6 +8,7 @@
 
 typedef struct {
 	tipo_snakePi snakePi;
+	//TipoLedDisplay led_display;
 	int debug;
 } TipoSistema;
 

@@ -1,11 +1,11 @@
 #include "teclado_TL04.h"
 
 char tecladoTL04[4][4] = {
-	{'Q', 'W', 'E', 'R'},
-	{'A', 'S', 'D', 'F'},
-	{'Z', 'X', 'C', 'V'},
-	{'1', '2', '3', '4'}
-};
+		{'q', 'w', 'e', 'r'},
+		{'a', 's', 'd', 'f'},
+		{'z', 'x', 'c', 'v'},
+		{'1', '2', '3', '4'}
+	};
 
 // Maquina de estados: lista de transiciones
 // {EstadoOrigen, CondicionDeDisparo, EstadoFinal, AccionesSiTransicion }
@@ -25,12 +25,9 @@ fsm_trans_t fsm_trans_deteccion_pulsaciones[] = {
 
 void InicializaTeclado(TipoTeclado *p_teclado) {
 
-		piLock(STD_IO_BUFFER_KEY);
-		wiringPiSetupGpio();
-		piUnlock(STD_IO_BUFFER_KEY);
 
 		// Comenzamos excitacion por primera columna
-		p_teclado->columna_actual = COLUMNA_1;
+		p_teclado->columna_actual = -1;
 
 		// Inicialmente no hay tecla pulsada
 		p_teclado->teclaPulsada.col = -1;
@@ -68,14 +65,6 @@ void InicializaTeclado(TipoTeclado *p_teclado) {
 		tmr_startms((tmr_t*)(p_teclado->tmr_duracion_columna), TIMEOUT_COLUMNA_TECLADO);
 
 
-		printf("\nMejoras:\n");
-		printf("La serpiente atravesará los bordes y aparecerá por el otro lado.\n");
-		printf("Al acabar, te dará el número de manzanas que te has comido\n");
-
-		printf("\nEl teclado matricial esta listo. Pulsa la 'S' para empezar\n");
-		printf("'D': Derecha, 'W': Arriba, 'A': Izquierda, 'X': Abajo 'Q': Salir\n ");
-		printf("Si pulsas la S durante el juego, el juego seguirá como si nada");
-		fflush(stdout);
 
 
 }
@@ -90,16 +79,10 @@ void ActualizaExcitacionTecladoGPIO (int columna) {
 		case COLUMNA_1:
 
 
-
 			digitalWrite (GPIO_KEYBOARD_COL_4, LOW);
 			digitalWrite (GPIO_KEYBOARD_COL_1, HIGH);
 			digitalWrite (GPIO_KEYBOARD_COL_2, LOW);
 			digitalWrite (GPIO_KEYBOARD_COL_3, LOW);
-
-
-			//teclado.flags &= ~FLAG_TIMEOUT_COLUMNA_TECLADO;
-
-			//tmr_startms((tmr_t*)(teclado.tmr_duracion_columna), FLAG_TIMEOUT_COLUMNA_TECLADO);
 
 			break;
 		case COLUMNA_2:
@@ -110,10 +93,6 @@ void ActualizaExcitacionTecladoGPIO (int columna) {
 			digitalWrite (GPIO_KEYBOARD_COL_2, HIGH);
 			digitalWrite (GPIO_KEYBOARD_COL_3, LOW);
 
-			//teclado.flags &= ~FLAG_TIMEOUT_COLUMNA_TECLADO;
-
-
-			//tmr_startms((tmr_t*)(teclado.tmr_duracion_columna), FLAG_TIMEOUT_COLUMNA_TECLADO);
 
 			break;
 		case COLUMNA_3:
@@ -122,9 +101,6 @@ void ActualizaExcitacionTecladoGPIO (int columna) {
 			digitalWrite (GPIO_KEYBOARD_COL_1, LOW);
 			digitalWrite (GPIO_KEYBOARD_COL_2, LOW);
 			digitalWrite (GPIO_KEYBOARD_COL_3, HIGH);
-			//teclado.flags &= ~FLAG_TIMEOUT_COLUMNA_TECLADO;
-
-			//tmr_startms((tmr_t*)(teclado.tmr_duracion_columna), FLAG_TIMEOUT_COLUMNA_TECLADO);
 
 			break;
 		case COLUMNA_4:
@@ -134,9 +110,6 @@ void ActualizaExcitacionTecladoGPIO (int columna) {
 			digitalWrite (GPIO_KEYBOARD_COL_2, LOW);
 			digitalWrite (GPIO_KEYBOARD_COL_3, LOW);
 
-			//teclado.flags &= ~FLAG_TIMEOUT_COLUMNA_TECLADO;
-
-			//tmr_startms((tmr_t*)(teclado.tmr_duracion_columna), FLAG_TIMEOUT_COLUMNA_TECLADO);
 			break;
 		default:
 			break;
@@ -148,25 +121,25 @@ void ActualizaExcitacionTecladoGPIO (int columna) {
 //------------------------------------------------------
 
 int CompruebaTimeoutColumna (fsm_t* this) {
-//	TipoTeclado *p_teclado;
-//	p_teclado = (TipoTeclado*)(this->user_data);
+	TipoTeclado *p_teclado;
+	p_teclado = (TipoTeclado*)(this->user_data);
 
 	int result = 0;
 	piLock(KEYBOARD_KEY);
-	result = teclado.flags & FLAG_TIMEOUT_COLUMNA_TECLADO;
+	result = p_teclado->flags & FLAG_TIMEOUT_COLUMNA_TECLADO;
 	piUnlock(KEYBOARD_KEY);
 
 	return result;
 }
 
 int CompruebaTeclaPulsada (fsm_t* this) {
-//	TipoTeclado *p_teclado;
-//	p_teclado = (TipoTeclado*)(this->user_data);
+	TipoTeclado *p_teclado;
+	p_teclado = (TipoTeclado*)(this->user_data);
 
 	int result = 0;
 
 	piLock(KEYBOARD_KEY);
-	result = teclado.flags & FLAG_TECLA_PULSADA;
+	result = p_teclado->flags & FLAG_TECLA_PULSADA;
 	piUnlock(KEYBOARD_KEY);
 
 	return result;
@@ -217,29 +190,35 @@ void ProcesaTeclaPulsada (fsm_t* this) {
 			else if(p_teclado->teclaPulsada.row == FILA_2){
 				piLock(SYSTEM_FLAGS_KEY);
 				flags |= FLAG_MOV_IZQUIERDA;
-				printf("Moviendo a la izquierda");
-				fflush(stdout);
+
+
 				piUnlock(SYSTEM_FLAGS_KEY);
 			}
+			else if(p_teclado->teclaPulsada.row == FILA_3){
+				piLock(SYSTEM_FLAGS_KEY);
+				flags |= FLAG_PAUSA_JUEGO;
+
+
+				piUnlock(SYSTEM_FLAGS_KEY);
+						}
+
 			break;
 		case COLUMNA_2:
 			if(p_teclado->teclaPulsada.row == FILA_1){
 				piLock(SYSTEM_FLAGS_KEY);
 				flags |= FLAG_MOV_ARRIBA;
-				printf("Moviendo hacia arriba");
-				fflush(stdout);
+
 				piUnlock(SYSTEM_FLAGS_KEY);
 			}
 			else if(p_teclado->teclaPulsada.row == FILA_2){
 				piLock(SYSTEM_FLAGS_KEY);
-				fflush(stdout);
 				flags |= FLAG_BOTON;
 				piUnlock(SYSTEM_FLAGS_KEY);
 			}
 			else if(p_teclado->teclaPulsada.row == FILA_3){
 				piLock(SYSTEM_FLAGS_KEY);
 				flags |= FLAG_MOV_ABAJO;
-				printf("Moviendo hacia abajo");
+
 				fflush(stdout);
 				piUnlock(SYSTEM_FLAGS_KEY);
 			}
@@ -248,11 +227,12 @@ void ProcesaTeclaPulsada (fsm_t* this) {
 			if(p_teclado->teclaPulsada.row == FILA_2){
 				piLock(SYSTEM_FLAGS_KEY);
 				flags |= FLAG_MOV_DERECHA;
-				printf("Moviendo hacia la derecha");
-				fflush(stdout);
+
+
 				piUnlock(SYSTEM_FLAGS_KEY);
 
 			}
+
 			break;
 		case COLUMNA_4:
 			printf("Ha pulsado la cuarta columna. No hace nada");

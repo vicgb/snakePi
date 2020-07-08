@@ -27,6 +27,8 @@ tipo_pantalla pantalla_final = {
 	}
 };
 
+
+
 // Maquina de estados: lista de transiciones
 // {EstadoOrigen, CondicionDeDisparo, EstadoFinal, AccionesSiTransicion }
 fsm_trans_t fsm_trans_excitacion_display[] = {
@@ -39,8 +41,48 @@ fsm_trans_t fsm_trans_excitacion_display[] = {
 //------------------------------------------------------
 
 void InicializaLedDisplay (TipoLedDisplay *led_display) {
-	// A completar por el alumno...
-	// ...
+
+	//Inicializamos la columna y los flags
+	led_display->columna_actual = -1;
+	led_display->flags = 0;
+
+	//led_display->pantalla = pantalla_inicial;
+
+
+
+	pinMode(GPIO_LED_DISPLAY_COL_1, OUTPUT);
+	digitalWrite(GPIO_LED_DISPLAY_COL_1, LOW);
+
+	pinMode(GPIO_LED_DISPLAY_COL_2, OUTPUT);
+	digitalWrite(GPIO_LED_DISPLAY_COL_2, LOW);
+
+	pinMode(GPIO_LED_DISPLAY_COL_3, OUTPUT);
+	digitalWrite(GPIO_LED_DISPLAY_COL_3, LOW);
+
+	pinMode(GPIO_LED_DISPLAY_ROW_1, OUTPUT);
+	digitalWrite(GPIO_LED_DISPLAY_ROW_1, HIGH);
+
+	pinMode(GPIO_LED_DISPLAY_ROW_2, OUTPUT);
+	digitalWrite(GPIO_LED_DISPLAY_ROW_2, HIGH);
+
+	pinMode(GPIO_LED_DISPLAY_ROW_3, OUTPUT);
+	digitalWrite(GPIO_LED_DISPLAY_ROW_3, HIGH);
+
+	pinMode(GPIO_LED_DISPLAY_ROW_4, OUTPUT);
+	digitalWrite(GPIO_LED_DISPLAY_ROW_4, HIGH);
+
+	pinMode(GPIO_LED_DISPLAY_ROW_5, OUTPUT);
+	digitalWrite(GPIO_LED_DISPLAY_ROW_5, HIGH);
+
+	pinMode(GPIO_LED_DISPLAY_ROW_6, OUTPUT);
+	digitalWrite(GPIO_LED_DISPLAY_ROW_6, HIGH);
+
+	pinMode(GPIO_LED_DISPLAY_ROW_7, OUTPUT);
+	digitalWrite(GPIO_LED_DISPLAY_ROW_7, HIGH);
+
+	led_display->tmr_refresco_display = tmr_new (timer_refresco_display_isr);
+	tmr_startms((tmr_t*)(led_display->tmr_refresco_display), TIMEOUT_COLUMNA_DISPLAY);
+
 }
 
 //------------------------------------------------------
@@ -48,26 +90,94 @@ void InicializaLedDisplay (TipoLedDisplay *led_display) {
 //------------------------------------------------------
 
 void ApagaFilas (TipoLedDisplay *led_display){
-	// A completar por el alumno...
-	// ...
+
+	for(int i = 0; i< NUM_FILAS_DISPLAY; i++){
+		digitalWrite(led_display->filas[i], HIGH);
+
+	}
 }
 
 void ExcitaColumnas(int columna) {
 
 	switch(columna) {
-		// A completar por el alumno...
-		// ...
+		case COLUMNA_DISPLAY_1:
+			digitalWrite(GPIO_LED_DISPLAY_COL_1, LOW);
+			digitalWrite(GPIO_LED_DISPLAY_COL_2, LOW);
+			digitalWrite(GPIO_LED_DISPLAY_COL_3, LOW);
+			break;
+		case COLUMNA_DISPLAY_2:
+			digitalWrite(GPIO_LED_DISPLAY_COL_1, HIGH);
+			digitalWrite(GPIO_LED_DISPLAY_COL_2, LOW);
+			digitalWrite(GPIO_LED_DISPLAY_COL_3, LOW);
+			break;
+		case COLUMNA_DISPLAY_3:
+			digitalWrite(GPIO_LED_DISPLAY_COL_1, LOW);
+			digitalWrite(GPIO_LED_DISPLAY_COL_2, HIGH);
+			digitalWrite(GPIO_LED_DISPLAY_COL_3, LOW);
+			break;
+		case COLUMNA_DISPLAY_4:
+			digitalWrite(GPIO_LED_DISPLAY_COL_1, HIGH);
+			digitalWrite(GPIO_LED_DISPLAY_COL_2, HIGH);
+			digitalWrite(GPIO_LED_DISPLAY_COL_3, LOW);
+			break;
+		case COLUMNA_DISPLAY_5:
+			digitalWrite(GPIO_LED_DISPLAY_COL_1, LOW);
+			digitalWrite(GPIO_LED_DISPLAY_COL_2, LOW);
+			digitalWrite(GPIO_LED_DISPLAY_COL_3, HIGH);
+			break;
+		case COLUMNA_DISPLAY_6:
+			digitalWrite(GPIO_LED_DISPLAY_COL_1, HIGH);
+			digitalWrite(GPIO_LED_DISPLAY_COL_2, LOW);
+			digitalWrite(GPIO_LED_DISPLAY_COL_3, HIGH);
+			break;
+		case COLUMNA_DISPLAY_7:
+			digitalWrite(GPIO_LED_DISPLAY_COL_1, LOW);
+			digitalWrite(GPIO_LED_DISPLAY_COL_2, HIGH);
+			digitalWrite(GPIO_LED_DISPLAY_COL_3, HIGH);
+			break;
+		case COLUMNA_DISPLAY_8:
+			digitalWrite(GPIO_LED_DISPLAY_COL_1, HIGH);
+			digitalWrite(GPIO_LED_DISPLAY_COL_2, HIGH);
+			digitalWrite(GPIO_LED_DISPLAY_COL_3, HIGH);
+			break;
+		default:
+			break;
 	}
 }
 
 void ActualizaLedDisplay (TipoLedDisplay *led_display) {
-	// A completar por el alumno...
-	// ...
+
+
+	ApagaFilas(led_display);
+
+
+	led_display->columna_actual++;
+
+	if(led_display->columna_actual >= NUM_COLUMNAS_DISPLAY ){
+		led_display->columna_actual = COLUMNA_DISPLAY_1;
+	}
+
+	//Excitamos esa columna
+	ExcitaColumnas(led_display->columna_actual);
+
+	//Aqui hay que encender las filas coherentes con la columna actual
+		for(int i = 0; i< NUM_FILAS_DISPLAY; i++){
+				if(led_display->pantalla.matriz[led_display->columna_actual][i] == 1){
+
+						digitalWrite(led_display->filas[i], LOW);
+				}else{
+						digitalWrite(led_display->filas[i], HIGH);
+
+	}
+		}
+
+
+	//tmr_startms((tmr_t*)(led_display->tmr_refresco_display), TIMEOUT_COLUMNA_DISPLAY);
 }
 
 void PintaPantallaPorTerminal (tipo_pantalla *p_pantalla) {
-	int i=0, j=0;
-
+	//int i=0, j=0;
+#ifdef __SIN_PSEUDOWIRINGPI__
 	printf("\n[PANTALLA]\n");
 	fflush(stdout);
 	for(j=0;j<NUM_FILAS_DISPLAY;j++) {
@@ -79,6 +189,7 @@ void PintaPantallaPorTerminal (tipo_pantalla *p_pantalla) {
 		fflush(stdout);
 	}
 	fflush(stdout);
+#endif
 }
 
 //------------------------------------------------------
@@ -87,11 +198,13 @@ void PintaPantallaPorTerminal (tipo_pantalla *p_pantalla) {
 
 int CompruebaTimeoutColumnaDisplay (fsm_t* this) {
 	int result = 0;
-	TipoLedDisplay *p_ledDisplay;
-	p_ledDisplay = (TipoLedDisplay*)(this->user_data);
 
-	// A completar por el alumno...
-	// ...
+	//TipoLedDisplay *p_ledDisplay;
+	//p_ledDisplay = (TipoLedDisplay*)(this->user_data);
+
+	piLock(MATRIX_KEY);
+	result = led_display.flags & FLAG_TIMEOUT_COLUMNA_DISPLAY;
+	piUnlock(MATRIX_KEY);
 
 	return result;
 }
@@ -104,8 +217,17 @@ void ActualizaExcitacionDisplay (fsm_t* this) {
 	TipoLedDisplay *p_ledDisplay;
 	p_ledDisplay = (TipoLedDisplay*)(this->user_data);
 
-	// A completar por el alumno...
-	// ...
+	p_ledDisplay = &led_display;
+
+	piLock(MATRIX_KEY);
+	led_display.flags &= ~FLAG_TIMEOUT_COLUMNA_DISPLAY;
+	piUnlock(MATRIX_KEY);
+
+	//Actualizamos el display
+	ActualizaLedDisplay(&led_display);
+
+	tmr_startms((tmr_t*)(p_ledDisplay->tmr_refresco_display), TIMEOUT_COLUMNA_DISPLAY);
+
 }
 
 //------------------------------------------------------
@@ -113,6 +235,8 @@ void ActualizaExcitacionDisplay (fsm_t* this) {
 //------------------------------------------------------
 
 void timer_refresco_display_isr (union sigval value) {
-	// A completar por el alumno...
-	// ...
+
+	piLock(MATRIX_KEY);
+	led_display.flags |= FLAG_TIMEOUT_COLUMNA_DISPLAY;
+	piUnlock(MATRIX_KEY);
 }

@@ -33,16 +33,9 @@ void InicializaSnakePi(tipo_snakePi *p_snakePi) {
 
 	ResetSnakePi(p_snakePi);
 
+
 	ActualizaPantallaSnakePi(p_snakePi);
 
-	piLock(STD_IO_BUFFER_KEY);
-
-	//printf("\nCOMIENZA EL JUEGO!!!\n");
-	//fflush(stdout);
-
-	PintaPantallaPorTerminal((tipo_pantalla*) (p_snakePi->p_pantalla));
-
-	piUnlock(STD_IO_BUFFER_KEY);
 }
 
 void ResetSnakePi(tipo_snakePi *p_snakePi) {
@@ -155,55 +148,44 @@ void CambiarDireccionSerpiente(tipo_serpiente *serpiente,
 }
 
 
-int CompruebaColision(tipo_serpiente *serpiente, tipo_manzana *manzana,
-		int comprueba_manzana) {
+int CompruebaColision(tipo_serpiente *serpiente, tipo_manzana *manzana, int comprueba_manzana) {
 	tipo_segmento *seg_i;
 
-
-
 	if (comprueba_manzana) {
-
 		// Para todos los elementos de la p_cola...
-		for (seg_i = serpiente->p_cola; seg_i; seg_i = seg_i->p_next) {
+		for (seg_i = serpiente->p_cola; seg_i; seg_i=seg_i->p_next) {
 			// ...compruebo si alguno ha "colisionado" con la manzana
 			if (seg_i->x == manzana->x && seg_i->y == manzana->y){
-				//Se suma 1 cada vez que se come una manzana.
-				numero_manzanas = numero_manzanas + 1;
+				numero_manzanas = numero_manzanas +1;
 				return 1;
 			}
-
-
 		}
-
-
-		return 0;
-	} else {
+	}
+	else {
 		// Compruebo si la cabeza de la serpiente colisiona con cualquier otro segmento de la cola...
-		for (seg_i = serpiente->p_cola; seg_i->p_next; seg_i = seg_i->p_next) {
-			if (serpiente->cabeza.x == seg_i->x
-					&& serpiente->cabeza.y == seg_i->y)
+		for(seg_i = serpiente->p_cola; seg_i->p_next; seg_i=seg_i->p_next) {
+			if (serpiente->cabeza.x == seg_i->x && serpiente->cabeza.y == seg_i->y)
 				return 1;
 		}
 
+
+
+		// Quitamos los bordes y asignamos el valor a recoger.
 		if(serpiente->cabeza.x < 0){
-			serpiente->cabeza.x = NUM_COLUMNAS_DISPLAY;
-
-		}
-		else if( serpiente->cabeza.x >= NUM_COLUMNAS_DISPLAY){
+			serpiente->cabeza.x = (NUM_COLUMNAS_DISPLAY - 1);
+		}else if(serpiente->cabeza.x >= NUM_COLUMNAS_DISPLAY){
 			serpiente->cabeza.x = 0;
-
-		}
-		else if(serpiente->cabeza.y < 0){
-			serpiente->cabeza.y = NUM_FILAS_DISPLAY;
-
-		}
-		else if(serpiente->cabeza.y >= NUM_FILAS_DISPLAY){
+		}else if(serpiente->cabeza.y < 0){
+			serpiente->cabeza.y = (NUM_FILAS_DISPLAY - 1);
+		}else if(serpiente->cabeza.y >= NUM_FILAS_DISPLAY){
 			serpiente->cabeza.y = 0;
-
 		}
 
-		return 0;
+
+
+
 	}
+	return 0;
 }
 
 // serpiente.p_cola->seg_1->seg_2->seg_3->...->seg_N->NULL
@@ -245,6 +227,7 @@ void PintaSerpiente(tipo_snakePi *p_snakePi) {
 }
 
 void ActualizaPantallaSnakePi(tipo_snakePi *p_snakePi) {
+
 	// Borro toda la pantalla
 	ReseteaPantallaSnakePi((tipo_pantalla*) (p_snakePi->p_pantalla));
 
@@ -340,6 +323,15 @@ int CompruebaFinalJuego(fsm_t *this) {
 	return result;
 }
 
+int CompruebaPausaJuego(fsm_t *this){
+	int result = 0;
+	piLock(SYSTEM_FLAGS_KEY);
+	result = flags & FLAG_PAUSA_JUEGO;
+	piUnlock(SYSTEM_FLAGS_KEY);
+
+	return result;
+}
+
 
 
 //------------------------------------------------------
@@ -350,14 +342,28 @@ void InicializaJuego(fsm_t *this) {
 	tipo_snakePi *p_snakePi;
 	p_snakePi = (tipo_snakePi*) (this->user_data);
 
+
+
 	piLock(SYSTEM_FLAGS_KEY);
-	flags &= ~FLAG_BOTON;
+	flags &= (~FLAG_MOV_IZQUIERDA);
+	flags &= (~FLAG_MOV_DERECHA);
+	flags &= (~FLAG_MOV_ARRIBA);
+	flags &= (~FLAG_MOV_ABAJO);
+	flags &= (~FLAG_BOTON);
 	piUnlock(SYSTEM_FLAGS_KEY);
+
+
 
 	piLock(MATRIX_KEY);
 	//Ejecutamos el juego.
 	InicializaSnakePi(p_snakePi);
 	piUnlock(MATRIX_KEY);
+
+
+	//Para ejecutar la simulacion del display
+	pseudoWiringPiEnableDisplay(1);
+
+
 }
 
 
@@ -386,14 +392,16 @@ void MueveSerpienteIzquierda(fsm_t *this) {
 		ActualizaPantallaSnakePi(p_snakePi);
 		piUnlock(MATRIX_KEY);
 
-		tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
+		if((numero_manzanas/2) < 3){
+					tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
 
-		piLock(STD_IO_BUFFER_KEY);
-		PintaPantallaPorTerminal(p_snakePi->p_pantalla);
-		piUnlock(STD_IO_BUFFER_KEY);
-	}
-
-}
+				}else if((numero_manzanas/2) >= 3 && (numero_manzanas/2) < 6){
+						tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT_RAPIDO);
+						}else if((numero_manzanas/2) >= 6){
+							tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT_RAPIDO2);
+						}
+					}
+				}
 
 void MueveSerpienteDerecha(fsm_t *this) {
 	tipo_snakePi *p_snakePi;
@@ -419,16 +427,17 @@ void MueveSerpienteDerecha(fsm_t *this) {
 		piUnlock(MATRIX_KEY);
 
 
-		tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
 
+		if((numero_manzanas/2) < 3){
+					tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
 
-		piLock(STD_IO_BUFFER_KEY);
-		PintaPantallaPorTerminal(p_snakePi->p_pantalla);
-		piUnlock(STD_IO_BUFFER_KEY);
-	}
-
-}
-
+				}else if((numero_manzanas/2) >= 3 && (numero_manzanas/2) < 6){
+						tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT_RAPIDO);
+						}else if((numero_manzanas/2) >= 6){
+							tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT_RAPIDO2);
+						}
+					}
+				}
 void MueveSerpienteArriba(fsm_t *this) {
 	tipo_snakePi *p_snakePi;
 	p_snakePi = (tipo_snakePi*) (this->user_data);
@@ -453,15 +462,17 @@ void MueveSerpienteArriba(fsm_t *this) {
 		ActualizaPantallaSnakePi(p_snakePi);
 		piUnlock(MATRIX_KEY);
 
-		tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
 
+		if((numero_manzanas/2) < 3){
+					tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
 
-		piLock(STD_IO_BUFFER_KEY);
-		PintaPantallaPorTerminal(p_snakePi->p_pantalla);
-		piUnlock(STD_IO_BUFFER_KEY);
-	}
-
-}
+				}else if((numero_manzanas/2) >= 3 && (numero_manzanas/2) < 6){
+						tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT_RAPIDO);
+						}else if((numero_manzanas/2) >= 6){
+							tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT_RAPIDO2);
+						}
+					}
+				}
 
 void MueveSerpienteAbajo(fsm_t *this) {
 	tipo_snakePi *p_snakePi;
@@ -487,15 +498,17 @@ void MueveSerpienteAbajo(fsm_t *this) {
 		ActualizaPantallaSnakePi(p_snakePi);
 		piUnlock(MATRIX_KEY);
 
-		tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
 
+		if((numero_manzanas/2) < 3){
+					tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
 
-		piLock(STD_IO_BUFFER_KEY);
-		PintaPantallaPorTerminal(p_snakePi->p_pantalla);
-		piUnlock(STD_IO_BUFFER_KEY);
-	}
-
-}
+				}else if((numero_manzanas/2) >= 3 && (numero_manzanas/2) < 6){
+						tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT_RAPIDO);
+						}else if((numero_manzanas/2) >= 6){
+							tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT_RAPIDO2);
+						}
+					}
+				}
 
 void ActualizarJuego(fsm_t *this) {
 	tipo_snakePi *p_snakePi;
@@ -503,41 +516,51 @@ void ActualizarJuego(fsm_t *this) {
 
 	piLock(SYSTEM_FLAGS_KEY);
 	flags &= (~FLAG_TIMER_JUEGO);
-	piUnlock(SYSTEM_FLAGS_KEY);
-
 	// Con esto apago el flag_boton y hago que si se da a la S no se reinicie.
-	piLock(SYSTEM_FLAGS_KEY);
 	flags &= (~FLAG_BOTON);
+	//flags &= (~FLAG_PAUSA_JUEGO);
 	piUnlock(SYSTEM_FLAGS_KEY);
 
-	ActualizaSnakePi(p_snakePi);
 
+
+	piLock(MATRIX_KEY);
+	ActualizaSnakePi(p_snakePi);
+	piUnlock(MATRIX_KEY);
 
 
 	if (CompruebaColision(&(p_snakePi->serpiente), &(p_snakePi->manzana), 0)) {
 		piLock(SYSTEM_FLAGS_KEY);
 		flags |= FLAG_FIN_JUEGO;
 		piUnlock(SYSTEM_FLAGS_KEY);
+
 	}
 
 	else {
 
+
 		piLock(MATRIX_KEY);
 		ActualizaPantallaSnakePi(p_snakePi);
+
 		piUnlock(MATRIX_KEY);
 
-		//Cada vez que se actualice la pantalla, corre el timer.
-		tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
 
-		piLock(STD_IO_BUFFER_KEY);
-		PintaPantallaPorTerminal(p_snakePi->p_pantalla);
-		piUnlock(STD_IO_BUFFER_KEY);
-	}
+		if((numero_manzanas/2) < 3 ){
+			tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
 
-}
+		}else if((numero_manzanas/2) >= 3 && (numero_manzanas/2) < 6){
+				tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT_RAPIDO);
+				}else if((numero_manzanas/2) >= 6){
+					tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT_RAPIDO2);
+				}
+			}
+		}
+
+
+
 
 void FinalJuego(fsm_t *this) {
 
+	pseudoWiringPiEnableDisplay(0);
 
 	tipo_snakePi *p_snakePi;
 	p_snakePi = (tipo_snakePi*) (this->user_data);
@@ -546,20 +569,84 @@ void FinalJuego(fsm_t *this) {
 	flags &= (~FLAG_FIN_JUEGO);
 	piUnlock(SYSTEM_FLAGS_KEY);
 
+
+	piLock(MATRIX_KEY);
+
+	ActualizaSnakePi(p_snakePi);
+
+	piUnlock(MATRIX_KEY);
+
+
+	printf("\nGAME OVER.\n");
 	printf("Te has comido %d manzanas. \n", numero_manzanas/2);
 	printf("Vuelve a pulsar la S para jugar");
 	fflush(stdout);
-	ActualizaSnakePi(p_snakePi);
+
+
+
+
 }
 
-void ReseteaJuego(fsm_t *this) {
+void PausaJuego(fsm_t *this){
+	//tipo_snakePi *p_snakePi;
+	//p_snakePi = (tipo_snakePi*) (this->user_data);
+
+	piLock(SYSTEM_FLAGS_KEY);
+
+	flags &= ~FLAG_PAUSA_JUEGO;
+	flags &= ~FLAG_BOTON;
+	flags &= ~FLAG_TIMER_JUEGO;
+
+
+	piUnlock(SYSTEM_FLAGS_KEY);
+
+
+
+
+
+}
+
+void ReanudarJuego(fsm_t *this){
 	tipo_snakePi *p_snakePi;
 	p_snakePi = (tipo_snakePi*) (this->user_data);
 
 	piLock(SYSTEM_FLAGS_KEY);
-	flags &= ~FLAG_TIMER_JUEGO;
+	flags &= ~FLAG_BOTON;
+	flags &= (~FLAG_MOV_IZQUIERDA);
+	flags &= (~FLAG_MOV_DERECHA);
+	flags &= (~FLAG_MOV_ARRIBA);
+	flags &= (~FLAG_MOV_ABAJO);
+	flags &= (~FLAG_BOTON);
 	piUnlock(SYSTEM_FLAGS_KEY);
 
-	ResetSnakePi(p_snakePi);
+	//tmr_startms(p_snakePi->tmr_serpiente, TIMEOUT);
+
+
+}
+
+
+
+void ReseteaJuego(fsm_t *this) {
+
+	piLock(SYSTEM_FLAGS_KEY);
+	flags &= ~FLAG_TIMER_JUEGO;
+	flags &= ~FLAG_FIN_JUEGO;
+	flags &= ~FLAG_BOTON;
+	piUnlock(SYSTEM_FLAGS_KEY);
+
+
+	printf("\n");
+	printf("\nPulse de nuevo S para empezar\n");
+	printf("D: Derecha, A: Izquierda, W: Arriba, X: Abajo, Z: Pausar, S: Reanudar\n");
+	printf("Mejoras:\n");
+	printf(" 1. - Te dice al acabar cuantas manzanas te has comido\n");
+	printf(" 2. - Cada 3 manzanas que se come, la serpiente va mas rápido\n");
+	printf(" 3. - Se puede pausar y reanudar el juego.\n");
+	printf(" 4. - No hay bordes.");
+
+
+	fflush(stdout);
+
+
 }
 
