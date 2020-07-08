@@ -72,7 +72,7 @@ int ConfiguraInicializaSistema (TipoSistema *p_sistema) {
 	}
 
 	printf("Sistema listo...\n");
-	printf("Presione una tecla para comenzar (i.e. la tecla s)...\n");
+	printf("Presione la 's' para comenzar el juego\n");
 	fflush(stdout);
 
 	return result;
@@ -99,9 +99,14 @@ PI_THREAD (thread_explora_teclado_PC) {
 
 					printf("Comienza el juego\n");
 					fflush(stdout);
+
 					piLock(SYSTEM_FLAGS_KEY);
 					flags |= FLAG_BOTON;
 					piUnlock(SYSTEM_FLAGS_KEY);
+
+
+					printf("La serpiente se moverá sola, una vez inicie el movimiento");
+					fflush(stdout);
 
 
 					break;
@@ -162,6 +167,17 @@ void delay_until (unsigned int next) {
 	}
 }
 
+/*
+ * Extraido del ejemplo de las diapositivas de la version 2, disponibles
+ * en Moodle.
+ */
+
+void timer_isr_snakePi(union sigval value){
+	piLock(SYSTEM_FLAGS_KEY);
+	flags |= FLAG_TIMER_JUEGO;
+	piUnlock(SYSTEM_FLAGS_KEY);
+}
+
 int main () {
 	TipoSistema sistema;
 	unsigned int next;
@@ -184,6 +200,8 @@ int main () {
 	fsm_t* snakePi_fsm = fsm_new (WAIT_START, snakePi, &(sistema.snakePi));
 	sistema.snakePi.p_pantalla = &pantalla_inicial;
 
+	//Temporizador del snake.
+	sistema.snakePi.tmr_serpiente = tmr_new(timer_isr_snakePi);
 
 	next = millis();
 	while (1) {

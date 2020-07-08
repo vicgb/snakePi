@@ -33,8 +33,8 @@ void InicializaSnakePi(tipo_snakePi *p_snakePi) {
 
 	piLock(STD_IO_BUFFER_KEY);
 
-	printf("\nCOMIENZA EL JUEGO!!!\n");
-	fflush(stdout);
+	//printf("\nCOMIENZA EL JUEGO!!!\n");
+	//fflush(stdout);
 
 	PintaPantallaPorTerminal((tipo_pantalla*) (p_snakePi->p_pantalla));
 
@@ -344,6 +344,8 @@ void InicializaJuego(fsm_t *this) {
 	flags &= ~FLAG_BOTON;
 	piUnlock(SYSTEM_FLAGS_KEY);
 
+
+
 	//Ejecutamos el juego.
 	InicializaSnakePi(p_snakePi);
 }
@@ -372,6 +374,8 @@ void MueveSerpienteIzquierda(fsm_t *this) {
 		piLock(MATRIX_KEY);
 		ActualizaPantallaSnakePi(p_snakePi);
 		piUnlock(MATRIX_KEY);
+
+		tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
 
 		piLock(STD_IO_BUFFER_KEY);
 		PintaPantallaPorTerminal(p_snakePi->p_pantalla);
@@ -405,6 +409,10 @@ void MueveSerpienteDerecha(fsm_t *this) {
 		ActualizaPantallaSnakePi(p_snakePi);
 		piUnlock(MATRIX_KEY);
 
+
+		tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
+
+
 		piLock(STD_IO_BUFFER_KEY);
 		PintaPantallaPorTerminal(p_snakePi->p_pantalla);
 		piUnlock(STD_IO_BUFFER_KEY);
@@ -436,6 +444,9 @@ void MueveSerpienteArriba(fsm_t *this) {
 		piLock(MATRIX_KEY);
 		ActualizaPantallaSnakePi(p_snakePi);
 		piUnlock(MATRIX_KEY);
+
+		tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
+
 
 		piLock(STD_IO_BUFFER_KEY);
 		PintaPantallaPorTerminal(p_snakePi->p_pantalla);
@@ -470,6 +481,9 @@ void MueveSerpienteAbajo(fsm_t *this) {
 		ActualizaPantallaSnakePi(p_snakePi);
 		piUnlock(MATRIX_KEY);
 
+		tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
+
+
 		piLock(STD_IO_BUFFER_KEY);
 		PintaPantallaPorTerminal(p_snakePi->p_pantalla);
 		piUnlock(STD_IO_BUFFER_KEY);
@@ -501,6 +515,9 @@ void ActualizarJuego(fsm_t *this) {
 		piLock(MATRIX_KEY);
 		ActualizaPantallaSnakePi(p_snakePi);
 		piUnlock(MATRIX_KEY);
+
+		//Cada vez que se actualice la pantalla, corre el timer.
+		tmr_startms((p_snakePi->tmr_serpiente), TIMEOUT);
 
 		piLock(STD_IO_BUFFER_KEY);
 		PintaPantallaPorTerminal(p_snakePi->p_pantalla);

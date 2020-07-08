@@ -17,7 +17,7 @@
 #include "tmr.h"
 
 #define CLK_MS 					1
-
+#define TIMEOUT 				1500
 // ATENCION: Valores a modificar por el alumno
 // INTERVALO DE GUARDA ANTI-REBOTES
 #define	DEBOUNCE_TIME			25

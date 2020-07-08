@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "ledDisplay.h"
+#include "tmr.h"
 
 enum t_direccion {
 	ARRIBA,
@@ -45,6 +46,7 @@ typedef struct {
 	tipo_pantalla *p_pantalla; // Esta es nuestra pantalla de juego (matriz 7x8 de labo)
 	tipo_serpiente serpiente;
 	tipo_manzana manzana;
+	tmr_t* tmr_serpiente;
 } tipo_snakePi;
 
 extern int flags; // Flags generales de sistema (necesario para comunicacion inter-FMs)
